@@ -588,7 +588,7 @@ class Decoder(nn.Module):
         super(Decoder, self).__init__()
         self.upsample=nn.ConvTranspose2d(64, 1, kernel_size=3, stride=4, padding=1, output_padding=3,dilation=1)
         self.softmax=nn.Softmax()
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU()
 
 
     def forward(self, lde_c,gde_c,lde_t,gde_t,q,k,v):
