@@ -488,12 +488,12 @@ class LDELayer(nn.Module):
     def __init__(self):
         super(LDELayer, self).__init__()
         self.relu = nn.ReLU(inplace=True)
-        self.conv_c=nn.Sequential(nn.Conv2d(256, 64, 1, 1, 1), self.relu, nn.Conv2d(64, 64, 3, 1, 0), self.relu)
-        #self.conv_d=nn.Sequential(nn.MaxPool2d(3),nn.Conv2d(256, 64, 7, 1, 6), nn.Conv2d(64, 64, 7, 1, 2), self.relu)
+        self.conv_c=nn.Sequential(nn.Conv2d(256, 64, 1, 1, 1),nn.BatchNorm2d(64), self.relu, nn.Conv2d(64, 64, 3, 1, 0),nn.BatchNorm2d(64), self.relu)
+        #self.conv_d=nn.Sequential(nn.MaxPool2d(3),nn.Conv2d(256, 64, 7, 1, 6),nn.BatchNorm2d(64), nn.Conv2d(64, 64, 7, 1, 2),nn.BatchNorm2d(64), self.relu)
         self.conv_d1=nn.MaxPool2d(3,1,1)
         self.conv_d2=nn.Conv2d(256, 64, 7, 1, 3)
         self.conv_d3= nn.Conv2d(64, 64, 7, 1, 3)
-
+        self.bn=nn.BatchNorm2d(64)
 
     def forward(self, list_x,list_y):
         #fconv_c=[]
@@ -512,7 +512,8 @@ class LDELayer(nn.Module):
             fconv_c=self.conv_c((list_x[j][0]).unsqueeze(0))
             a=self.conv_d1((list_x[j][1]).unsqueeze(0))  
             b=self.conv_d2(a)
-            fconv_d=self.relu(self.conv_d3(b))
+            b=self.bn(b)
+            fconv_d=self.relu(self.bn(self.conv_d3(b)))
             sum_t_lde=(list_y[j][0]+list_y[j][1]).unsqueeze(0)
             mul_t_lde=(list_y[j][0]*list_y[j][1]).unsqueeze(0)
             tran_c.append(torch.cat((sum_t_lde,mul_t_lde),dim=0))
