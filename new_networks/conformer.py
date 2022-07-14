@@ -588,7 +588,7 @@ class Decoder(nn.Module):
         super(Decoder, self).__init__()
         self.upsample=nn.ConvTranspose2d(64, 1, kernel_size=3, stride=4, padding=1, output_padding=3,dilation=1)
         self.softmax=nn.Softmax()
-        
+        self.relu = nn.ReLU(inplace=True)
 
 
     def forward(self, lde_c,gde_c,lde_t,gde_t,q,k,v):
@@ -609,7 +609,7 @@ class Decoder(nn.Module):
         h_index=4
         for j in range(len(lde_c)):
             #print('decoder lde_c',lde_c[j].shape)
-            lde_c[j]=self.upsample(lde_c[j])
+            lde_c[j]=self.relu(self.upsample(lde_c[j]))
             #print('decoder lde_c after upsample',lde_c[j].shape,lde_c[j][0].shape,lde_c[j][1].shape)
             sum_low=(lde_c[j][0] + lde_c[j][1]).unsqueeze(0)
             mul_low=(lde_c[j][0] * lde_c[j][1]).unsqueeze(0)
@@ -623,7 +623,7 @@ class Decoder(nn.Module):
             #print('tran low1 2',tran_low1.shape,tran_low2.shape)
             cat_tran_low=torch.cat((tran_low1,tran_low2),dim=0)
             cat_tran_low=cat_tran_low.unsqueeze(1)
-            lft=F.interpolate(cat_tran_low, (320,320), mode='bilinear', align_corners=True)
+            lft=self.relu(F.interpolate(cat_tran_low, (320,320), mode='bilinear', align_corners=True))
             low_features_tran.append(lft)
             lft+=lft
             
@@ -631,7 +631,7 @@ class Decoder(nn.Module):
         for k1 in range(len(gde_c)):
             sum_high=(gde_c[k1][0] + gde_c[k1][1]).unsqueeze(0)
             mul_high=(gde_c[k1][0] * gde_c[k1][1]).unsqueeze(0)
-            gfc=torch.cat((sum_high,mul_high), dim=0)
+            gfc=self.relu(torch.cat((sum_high,mul_high), dim=0))
             high_features_conv.append(gfc)
             gfc+=gfc
             
@@ -639,7 +639,7 @@ class Decoder(nn.Module):
             tran_high2=(gde_t[k1][0]*(self.softmax(q[h_index][0]*k[h_index][1])*v[h_index][1])).unsqueeze(0)
             cat_tran_high=torch.cat((tran_high1,tran_high2),dim=0)
             cat_tran_high=cat_tran_high.unsqueeze(1)
-            gft=F.interpolate(cat_tran_high, (320,320), mode='bilinear', align_corners=True)
+            gft=self.relu(F.interpolate(cat_tran_high, (320,320), mode='bilinear', align_corners=True))
             high_features_tran.append(gft)
             gft+=gft
             h_index=h_index+1
@@ -688,7 +688,8 @@ class JL_DCF(nn.Module):
         sal_final=self.final_conv((final).unsqueeze(0))
         #print('sal_final',sal_final.shape)
         
-        return sal_final,sal_lde_conv,sal_lde_tran,sal_gde_conv,sal_gde_tran,coarse_sal
+        #return sal_final,sal_lde_conv,sal_lde_tran,sal_gde_conv,sal_gde_tran,coarse_sal
+        return sal_final,coarse_sal
 
 def build_model(network='conformer', base_model_cfg='conformer'):
    
