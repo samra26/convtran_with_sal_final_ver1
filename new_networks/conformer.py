@@ -488,12 +488,12 @@ class LDELayer(nn.Module):
     def __init__(self):
         super(LDELayer, self).__init__()
         self.relu = nn.ReLU()
-        self.conv_c=nn.Sequential(nn.Conv2d(256, 64, 1, 1, 1),nn.BatchNorm2d(64), self.relu, nn.Conv2d(64, 64, 3, 1, 0),nn.BatchNorm2d(64), self.relu)
-        #self.conv_d=nn.Sequential(nn.MaxPool2d(3),nn.Conv2d(256, 64, 7, 1, 6),nn.BatchNorm2d(64), nn.Conv2d(64, 64, 7, 1, 2),nn.BatchNorm2d(64), self.relu)
+        self.conv_c=nn.Sequential(nn.Conv2d(256, 64, 1, 1, 1),self.relu, nn.Conv2d(64, 64, 3, 1, 0), self.relu)
+        #self.conv_d=nn.Sequential(nn.MaxPool2d(3),nn.Conv2d(256, 64, 7, 1, 6), nn.Conv2d(64, 64, 7, 1, 2), self.relu)
         self.conv_d1=nn.MaxPool2d(3,1,1)
         self.conv_d2=nn.Conv2d(256, 64, 7, 1, 3)
         self.conv_d3= nn.Conv2d(64, 64, 7, 1, 3)
-        self.bn=nn.BatchNorm2d(64)
+        
 
     def forward(self, list_x,list_y):
         #fconv_c=[]
@@ -512,8 +512,8 @@ class LDELayer(nn.Module):
             fconv_c=self.conv_c((list_x[j][0]).unsqueeze(0))
             a=self.conv_d1((list_x[j][1]).unsqueeze(0))  
             b=self.conv_d2(a)
-            b=self.bn(b)
-            fconv_d=self.relu(self.bn(self.conv_d3(b)))
+            
+            fconv_d=self.relu(self.conv_d3(b))
             sum_t_lde=(list_y[j][0]+list_y[j][1]).unsqueeze(0)
             mul_t_lde=(list_y[j][0]*list_y[j][1]).unsqueeze(0)
             tran_c.append(torch.cat((sum_t_lde,mul_t_lde),dim=0))
@@ -588,7 +588,7 @@ class Decoder(nn.Module):
         super(Decoder, self).__init__()
         self.upsample=nn.ConvTranspose2d(64, 1, kernel_size=3, stride=4, padding=1, output_padding=3,dilation=1)
         self.softmax=nn.Softmax()
-        self.relu = nn.ReLU()
+        
 
 
     def forward(self, lde_c,gde_c,lde_t,gde_t,q,k,v):
@@ -609,7 +609,7 @@ class Decoder(nn.Module):
         h_index=4
         for j in range(len(lde_c)):
             #print('decoder lde_c',lde_c[j].shape)
-            lde_c[j]=self.relu(self.upsample(lde_c[j]))
+            lde_c[j]=self.upsample(lde_c[j])
             #print('decoder lde_c after upsample',lde_c[j].shape,lde_c[j][0].shape,lde_c[j][1].shape)
             sum_low=(lde_c[j][0] + lde_c[j][1]).unsqueeze(0)
             mul_low=(lde_c[j][0] * lde_c[j][1]).unsqueeze(0)
@@ -623,7 +623,7 @@ class Decoder(nn.Module):
             #print('tran low1 2',tran_low1.shape,tran_low2.shape)
             cat_tran_low=torch.cat((tran_low1,tran_low2),dim=0)
             cat_tran_low=cat_tran_low.unsqueeze(1)
-            lft=self.relu(F.interpolate(cat_tran_low, (320,320), mode='bilinear', align_corners=True))
+            lft=F.interpolate(cat_tran_low, (320,320), mode='bilinear', align_corners=True)
             low_features_tran.append(lft)
             lft+=lft
             
@@ -631,7 +631,7 @@ class Decoder(nn.Module):
         for k1 in range(len(gde_c)):
             sum_high=(gde_c[k1][0] + gde_c[k1][1]).unsqueeze(0)
             mul_high=(gde_c[k1][0] * gde_c[k1][1]).unsqueeze(0)
-            gfc=self.relu(torch.cat((sum_high,mul_high), dim=0))
+            gfc=torch.cat((sum_high,mul_high), dim=0)
             high_features_conv.append(gfc)
             gfc+=gfc
             
@@ -639,7 +639,7 @@ class Decoder(nn.Module):
             tran_high2=(gde_t[k1][0]*(self.softmax(q[h_index][0]*k[h_index][1])*v[h_index][1])).unsqueeze(0)
             cat_tran_high=torch.cat((tran_high1,tran_high2),dim=0)
             cat_tran_high=cat_tran_high.unsqueeze(1)
-            gft=self.relu(F.interpolate(cat_tran_high, (320,320), mode='bilinear', align_corners=True))
+            gft=F.interpolate(cat_tran_high, (320,320), mode='bilinear', align_corners=True)
             high_features_tran.append(gft)
             gft+=gft
             h_index=h_index+1
