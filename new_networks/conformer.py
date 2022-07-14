@@ -487,7 +487,7 @@ class JLModule(nn.Module):
 class LDELayer(nn.Module):
     def __init__(self):
         super(LDELayer, self).__init__()
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU()
         self.conv_c=nn.Sequential(nn.Conv2d(256, 64, 1, 1, 1),nn.BatchNorm2d(64), self.relu, nn.Conv2d(64, 64, 3, 1, 0),nn.BatchNorm2d(64), self.relu)
         #self.conv_d=nn.Sequential(nn.MaxPool2d(3),nn.Conv2d(256, 64, 7, 1, 6),nn.BatchNorm2d(64), nn.Conv2d(64, 64, 7, 1, 2),nn.BatchNorm2d(64), self.relu)
         self.conv_d1=nn.MaxPool2d(3,1,1)
