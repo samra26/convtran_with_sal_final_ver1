@@ -587,7 +587,7 @@ class Decoder(nn.Module):
     def __init__(self):
         super(Decoder, self).__init__()
         self.upsample=nn.ConvTranspose2d(64, 1, kernel_size=3, stride=4, padding=1, output_padding=3,dilation=1)
-        self.softmax=nn.Softmax()
+        self.softmax=nn.Softmax(dim=1)
         
 
 
