@@ -26,8 +26,8 @@ class ImageDataTrain(data.Dataset):
         im_name = self.sal_list[item % self.sal_num].split()[0]
         de_name = self.sal_list[item % self.sal_num].split()[1]
         gt_name = self.sal_list[item % self.sal_num].split()[2]
-        sal_image = load_image(os.path.join(self.sal_root, im_name), self.image_size)
-        sal_depth = load_image(os.path.join(self.sal_root, de_name), self.image_size)
+        sal_image , im_size= load_image(os.path.join(self.sal_root, im_name), self.image_size)
+        sal_depth, im_size = load_image(os.path.join(self.sal_root, de_name), self.image_size)
         sal_label = load_sal_label(os.path.join(self.sal_root, gt_name), self.image_size)
 
         sal_image, sal_depth, sal_label = cv_random_crop(sal_image, sal_depth, sal_label, self.image_size)
@@ -61,10 +61,10 @@ class ImageDataVal(data.Dataset):
         im_name = self.sal_list[item % self.sal_num].split()[0]
         de_name = self.sal_list[item % self.sal_num].split()[1]
         gt_name = self.sal_list[item % self.sal_num].split()[2]
-        sal_image = load_image(os.path.join(self.sal_root, im_name), self.image_size)
-        sal_depth = load_image(os.path.join(self.sal_root, de_name), self.image_size)
+        sal_image , im_size= load_image(os.path.join(self.sal_root, im_name), self.image_size)
+        sal_depth, im_size = load_image(os.path.join(self.sal_root, de_name), self.image_size)
         sal_label = load_sal_label(os.path.join(self.sal_root, gt_name), self.image_size)
-
+        
         sal_image, sal_depth, sal_label = cv_random_crop(sal_image, sal_depth, sal_label, self.image_size)
         sal_image = sal_image.transpose((2, 0, 1))
         sal_depth = sal_depth.transpose((2, 0, 1))
@@ -74,7 +74,7 @@ class ImageDataVal(data.Dataset):
         sal_depth = torch.Tensor(sal_depth)
         sal_label = torch.Tensor(sal_label)
 
-        sample = {'sal_image': sal_image, 'sal_depth': sal_depth, 'sal_label': sal_label}
+        sample = {'sal_image': sal_image, 'sal_depth': sal_depth, 'sal_label': sal_label,'name': self.sal_list[item % self.sal_num].split()[0].split('/')[1],'size': im_size}
         return sample
 
     def __len__(self):
@@ -127,9 +127,10 @@ def load_image(path,image_size):
         print('File {} not exists'.format(path))
     im = cv2.imread(path)
     in_ = np.array(im, dtype=np.float32)
+    im_size = tuple(in_.shape[:2])
     in_ = cv2.resize(in_, (image_size, image_size))
     in_ = Normalization(in_)
-    return in_
+    return in_,im_size
 
 
 
