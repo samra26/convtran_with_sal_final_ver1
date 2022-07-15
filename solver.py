@@ -16,9 +16,10 @@ size_coarse = (20, 20)
 
 
 class Solver(object):
-    def __init__(self, train_loader, test_loader, config):
+    def __init__(self, train_loader, test_loader,val_loader config):
         self.train_loader = train_loader
         self.test_loader = test_loader
+        self.val_loader=val_loader
         self.config = config
         self.iter_size = config.iter_size
         self.show_every = config.show_every
@@ -225,10 +226,10 @@ class Solver(object):
                 torch.save(self.net.state_dict(), '%s/epoch_%d.pth' % (self.config.save_folder, epoch + 1))
             train_loss=r_sal_loss_item/len(self.train_loader.dataset)
             loss_vals.append(train_loss)
-            mae,fMeasure,loss_val,loss_val_r = self.val()
+            mae,fMeasure,loss_val_r,loss_val= self.val()
             print('Epoch:[%2d/%2d] | Train Loss : %.3f' % (epoch, self.config.epoch,train_loss))
-            print('Epoch:[%2d/%2d] | Validation Loss : %.3f | mae : %.3f|fMeasure: %.3f' % (epoch, self.config.epoch,loss_val_r,mae,fMeasure))
-            writer.add_scalar('validation loss', loss_val_r ,epoch * len(self.val_loader.dataset) + i)
+            print('Epoch:[%2d/%2d] | Validation Loss : %.3f | mae : %.3f|fMeasure: %.3f' % (epoch, self.config.epoch,loss_val_r/len(self.val_loader.dataset),mae,fMeasure))
+            writer.add_scalar('validation loss', loss_val ,epoch * len(self.val_loader.dataset) + i)
         # save model
         torch.save(self.net.state_dict(), '%s/final.pth' % self.config.save_folder)
         
