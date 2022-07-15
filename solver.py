@@ -235,18 +235,18 @@ class Solver(object):
         
 
 
-def Eval_pr(y_pred, y, num):
-    if self.config.cuda:
-        device = torch.device(self.config.device_id)
-        prec, recall = torch.zeros(num).to(device), torch.zeros(num).to(device)
-        thlist = torch.linspace(0, 1 - 1e-10, num).to(device)
-    else:
-        prec, recall = torch.zeros(num), torch.zeros(num)
-        thlist = torch.linspace(0, 1 - 1e-10, num)
-    for i in range(num):
-        y_temp = (y_pred >= thlist[i]).float()
-        tp = (y_temp * y).sum()
-        prec[i], recall[i] = tp / (y_temp.sum() + 1e-20), tp / (y.sum() + 1e-20)
-    return prec, recall
+    def Eval_pr(self,y_pred, y, num):
+        if self.config.cuda:
+            device = torch.device(self.config.device_id)
+            prec, recall = torch.zeros(num).to(device), torch.zeros(num).to(device)
+            thlist = torch.linspace(0, 1 - 1e-10, num).to(device)
+        else:
+            prec, recall = torch.zeros(num), torch.zeros(num)
+            thlist = torch.linspace(0, 1 - 1e-10, num)
+        for i in range(num):
+            y_temp = (y_pred >= thlist[i]).float()
+            tp = (y_temp * y).sum()
+            prec[i], recall[i] = tp / (y_temp.sum() + 1e-20), tp / (y.sum() + 1e-20)
+        return prec, recall
     
    
