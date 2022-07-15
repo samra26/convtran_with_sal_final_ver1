@@ -16,7 +16,7 @@ size_coarse = (20, 20)
 
 
 class Solver(object):
-    def __init__(self, train_loader, test_loader,val_loader config):
+    def __init__(self, train_loader, test_loader,val_loader, config):
         self.train_loader = train_loader
         self.test_loader = test_loader
         self.val_loader=val_loader
