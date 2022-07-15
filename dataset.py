@@ -45,6 +45,40 @@ class ImageDataTrain(data.Dataset):
     def __len__(self):
         return self.sal_num
 
+class ImageDataVal(data.Dataset):
+    def __init__(self, data_root, data_list,image_size):
+        self.sal_root = data_root
+        self.sal_source = data_list
+        self.image_size = image_size
+
+        with open(self.sal_source, 'r') as f:
+            self.sal_list = [x.strip() for x in f.readlines()]
+
+        self.sal_num = len(self.sal_list)
+
+    def __getitem__(self, item):
+        # sal data loading
+        im_name = self.sal_list[item % self.sal_num].split()[0]
+        de_name = self.sal_list[item % self.sal_num].split()[1]
+        gt_name = self.sal_list[item % self.sal_num].split()[2]
+        sal_image = load_image(os.path.join(self.sal_root, im_name), self.image_size)
+        sal_depth = load_image(os.path.join(self.sal_root, de_name), self.image_size)
+        sal_label = load_sal_label(os.path.join(self.sal_root, gt_name), self.image_size)
+
+        sal_image, sal_depth, sal_label = cv_random_crop(sal_image, sal_depth, sal_label, self.image_size)
+        sal_image = sal_image.transpose((2, 0, 1))
+        sal_depth = sal_depth.transpose((2, 0, 1))
+        sal_label = sal_label.transpose((2, 0, 1))
+
+        sal_image = torch.Tensor(sal_image)
+        sal_depth = torch.Tensor(sal_depth)
+        sal_label = torch.Tensor(sal_label)
+
+        sample = {'sal_image': sal_image, 'sal_depth': sal_depth, 'sal_label': sal_label}
+        return sample
+
+    def __len__(self):
+        return self.sal_num
 
 class ImageDataTest(data.Dataset):
     def __init__(self, data_root, data_list,image_size):
@@ -81,6 +115,12 @@ def get_loader(config, mode='train', pin=True):
                                       num_workers=config.num_thread, pin_memory=pin)
     return data_loader
 
+def get_val_loader(config):
+    shuffle = True
+    dataset = ImageDataVal(config.val_root, config.val_list, config.image_size)
+    data_loader = data.DataLoader(dataset=dataset, batch_size=config.batch_size, shuffle=shuffle,
+                                      num_workers=config.num_thread)
+    return data_loader
 
 def load_image(path,image_size):
     if not os.path.exists(path):
