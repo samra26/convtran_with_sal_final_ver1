@@ -1,6 +1,6 @@
 import argparse
 import os
-from dataset import get_loader
+from dataset import get_loader,get_val_loader
 from solver import Solver
 import time
 
@@ -37,17 +37,17 @@ import time
 def main(config):
     if config.mode == 'train':
         train_loader = get_loader(config)
-
+        val_loader = get_val_loader(config)
         if not os.path.exists("%s/demo-%s" % (config.save_folder, time.strftime("%d"))):
             os.mkdir("%s/demo-%s" % (config.save_folder, time.strftime("%d")))
         config.save_folder = "%s/demo-%s" % (config.save_folder, time.strftime("%d"))
-        train = Solver(train_loader, None, config)
+        train = Solver(train_loader, None, val_loader,config)
         train.train()
     elif config.mode == 'test':
         #get_test_info(config)
         test_loader = get_loader(config, mode='test')
         if not os.path.exists(config.test_folder): os.makedirs(config.test_folder)
-        test = Solver(None, test_loader, config)
+        test = Solver(None, test_loader, None,config)
         test.test()
     else:
         raise IOError("illegal input!!!")
@@ -91,6 +91,10 @@ if __name__ == '__main__':
     # Train data
     parser.add_argument('--train_root', type=str, default='../RGBDcollection')
     parser.add_argument('--train_list', type=str, default='../RGBDcollection/train.lst')
+    
+    #val data
+    parser.add_argument('--val_root', type=str, default='../RGBDcollection')
+    parser.add_argument('--val_list', type=str, default='../RGBDcollection/train.lst')
 
     # Testing settings
     parser.add_argument('--model', type=str, default='checkpoints/vgg16.pth')  # Snapshot
